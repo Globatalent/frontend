@@ -51,7 +51,11 @@
             small.form-text.text-danger You must type the same password each time.
         b-form-group
           b-button.button-style(type='submit', variant='primary',
-          block, :disabled='isSignupButtonDisabled') Sign Up
+          block, :disabled='isSignupButtonDisabled')
+            | Sign Up &nbsp;
+
+            i.fa.fa-spinner.fa-spin(v-if="isButtonLoading", aria-hidden='true')
+
       b-alert(:show='dismissCountDown',
       dismissible,
       variant='danger',
@@ -79,6 +83,7 @@ export default {
   data() {
     return {
       msg: 'Register Page',
+      isButtonLoading: false,
       form: {
         name: '',
         surname: '',
@@ -103,7 +108,7 @@ export default {
   methods: {
     onSubmit(evt) {
       evt.preventDefault();
-      console.log(JSON.stringify(this.form));
+      this.isButtonLoading = true;
       this.errorPass = false;
       if (this.form.password === this.form.confirmPassword) {
         this.isSignupButtonDisabled = true;
@@ -117,11 +122,16 @@ export default {
     },
     regUser(data) {
       loginService.createUser(data)
-        .then((res) => {
-          console.debug(res);
-          this.$router.push({ name: 'Login' });
+        .then(() => {
+          const obj = {
+            message: 'An email has been sent to confirm your registration',
+          };
+          this.$router.push({ name: 'Login', query: obj });
+          this.isButtonLoading = true;
         })
         .catch((err) => {
+          this.isSignupButtonDisabled = false;
+          this.isButtonLoading = false;
           this.errMessage = err.response.data.message;
           this.dismissCountDown = 5;
           console.debug(err);

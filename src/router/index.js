@@ -13,25 +13,35 @@ router.beforeEach((to, from, next) => {
 
   const privateRoutes = [
     'Home',
+    'Sportsmen',
+    'Search',
   ];
 
   const publicRoutes = [
     'Login',
+    'Logout',
     'Register',
+    'Market',
   ];
 
   if (privateRoutes.includes(to.name)) {
     const tokenData = Vue.ls.get('tokenData');
     if (tokenData) {
-      console.debug('Estas logeado!');
       next();
     } else {
       Vue.ls.clear();
-      console.debug('Hacker!');
+      console.debug('Acaso te crees hacker!?');
       next({ name: 'Login' });
     }
   } else if (publicRoutes.includes(to.name)) {
-    next();
+    if (to.name === 'Logout') {
+      Vue.ls.clear();
+      next({ name: 'Login' });
+    } else {
+      next();
+    }
+  } else {
+    console.warn('Esta ruta no está definida, no puedo continuar');
   }
 });
 

@@ -9,7 +9,7 @@
 
   #app
     position: relative
-    // height 100
+    min-height 100vh
     color #fff
     background-color background
 

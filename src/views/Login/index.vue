@@ -1,5 +1,8 @@
 <template lang="pug">
   v-layout
+    template(v-if="createdUserMsg")
+      b-alert(show, dismissible, variant="success", @dismissed="clearQueryParam")
+        | {{ createdUserMsg }}
     b-jumbotron.login-cont
       h3.title Login
       b-form(@submit='onSubmit')
@@ -8,7 +11,7 @@
           type='text',
           v-model='form.username',
           required,
-          placeholder='Email')
+          placeholder='Username')
         b-form-group
           b-form-input#exampleInput2(
           type='password',
@@ -42,10 +45,13 @@ export default {
   components: {
     VLayout,
   },
-  created() {},
+  created() {
+    this.createdUserMsg = this.$route.query.message || null;
+  },
   data() {
     return {
       msg: 'LOGIN Page',
+      createdUserMsg: '',
       form: {
         username: '',
         password: '',
@@ -62,7 +68,6 @@ export default {
   methods: {
     onSubmit(evt) {
       evt.preventDefault();
-      console.log(JSON.stringify(this.form));
       this.logUser(this.form);
     },
     countDownChanged(dismissCountDown) {
@@ -80,6 +85,9 @@ export default {
           this.dismissCountDown = 5;
           console.debug(err);
         });
+    },
+    clearQueryParam() {
+      this.$router.push({ name: 'Login' });
     },
   },
 };
