@@ -11,4 +11,11 @@ export default {
     const resource = '/register';
     return axios.post(`${config.API_URL}${resource}`, data);
   },
+  regenPassword(userEmail) {
+    const resource = '/forgottenpassword';
+    const body = {
+      email: userEmail,
+    };
+    return axios.put(`${config.API_URL}${resource}`, body);
+  },
 };

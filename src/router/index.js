@@ -15,6 +15,7 @@ router.beforeEach((to, from, next) => {
     'Home',
     'Sportsmen',
     'Search',
+    'Profile',
   ];
 
   const publicRoutes = [
@@ -22,6 +23,7 @@ router.beforeEach((to, from, next) => {
     'Logout',
     'Register',
     'Market',
+    'Reset',
   ];
 
   if (privateRoutes.includes(to.name)) {

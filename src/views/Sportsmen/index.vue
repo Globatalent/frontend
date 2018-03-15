@@ -34,37 +34,68 @@
                     vue-numeric(currency='',
                     separator='.',
                     v-model='totalSupply',
-                    :read-only="true",
-                    :precision="2")
+                    :read-only="true")
+                    | &nbsp {{ tokenName }}
                   span.lead.text-muted Total Supply
                 .item.item-2
                   p.mb-0.h3
                     vue-numeric(currency='',
                     separator='.',
                     v-model='currentSupply',
-                    :read-only="true",
-                    :precision="2")
+                    :read-only="true")
+                    | &nbsp {{ tokenName }}
                   span.lead.text-muted Current Supply
               .block
                 .item.item-1
                   p
-                    span.h3 1 Token = € {{ tokenValue }}
+                    span.h3 1 {{ tokenName }} = USD {{ tokenValue }}
                   hr
                   template(v-if="addTokensResult")
                     b-alert(show, dismissible, :variant="addTokensResult.result == 'success' ? 'success' : 'danger'")
                       | {{ addTokensResult.message }}
                   .super-input.d-flex.justify-content-center
                     .cont
-                      span.h5 Token Amount
-                      b-form-input.mb-3(@input="calculateTotalTokenAmount",
-                      v-model='tokensToBuy',
-                      type='number',
-                      placeholder='Amount of tokens')
-                      span.h5 Price
-                      b-form-input.mb-3(v-model='priceAmountToken',
-                      type='number',
-                      disabled)
-                      b-button(variant="primary", @click="buyTokens") Buy Tokens
+                      b-form-group(label='Token Amount')
+                        b-form-input.mb-3(@input="calculateTotalTokenAmount",
+                        v-model='tokensToBuy',
+                        type='number',
+                        placeholder='Amount of tokens',
+                        name='Amount of tokens',
+                        v-validate="'numeric|max:8'",
+                        :class="{'input': true, 'is-danger': errors.has('tokensToBuy') }")
+                        span.help.is-danger(v-show="errors.has('Amount of tokens')").failAlert {{ errors.first('Amount of tokens') }}
+                      b-form-group(label='Price')
+                        b-form-input.mb-3(v-model='priceAmountToken',
+                        type='number',
+                        disabled)
+                      b-button.button-style(variant="primary", @click.prevent="checkAmount") Buy Tokens &nbsp
+                        i.fa.fa-credit-card
+            b-modal(centered='',
+            v-model="amountCorrect",
+            title="Purchase Confirmation",
+            header-bg-variant="dark",
+            body-bg-variant="secondary",
+            footer-bg-variant="dark",
+            body-text-variant="light")
+              b-container(fluid='')
+                b-row.mb-1
+                  h5.my-4
+                    | Confirm purchase of &nbsp;
+                    span
+                      b
+                        ins {{ tokensToBuy }}
+                    | &nbsp {{ tokenName }} for &nbsp
+                    span
+                      b
+                        ins {{ priceAmountToken }}
+                    | &nbsp USD
+              .w-100(slot='modal-footer')
+                b-btn.float-right(size='sm',
+                variant='primary',
+                @click='buyTokens',
+                block).button-style
+                  | Confirm purchase
+
             .overview-block-2.bg-block.mb-5(v-if='investorSportsmen')
               .block.block-bottom
                 .item.item-1
@@ -74,13 +105,13 @@
                   span.lead.text-muted Token Amount
                 .item.item-2
                   p.mb-0
-                    span.h3 € {{ tokenValue }}
+                    span.h3 USD {{ tokenValue }}
                   span.lead.text-muted Token Value
               .block
                 .item.item-1
                   p
                     span.h3 Capitalization = &nbsp;
-                      vue-numeric(currency='€',
+                      vue-numeric(currency='USD',
                       separator='.',
                       v-model='tokenCapitalization',
                       :read-only="true",
@@ -93,32 +124,32 @@
             b-row
               b-col(sm="4")
                 .gg
-                  b-button.button-social(v-if='facebookLink',
+                  b-button.button-style(v-if='facebookLink',
                   :href='facebookLink',
                   block,
                   target="_blank")
                     b Facebook
-                  b-button.button-social(v-if='linkedinLink',
+                  b-button.button-style(v-if='linkedinLink',
                   :href='linkedinLink',
                   block,
                   target="_blank")
                     b LinkedIn
-                  b-button.button-social(v-if='youtubeLink',
+                  b-button.button-style(v-if='youtubeLink',
                   :href='youtubeLink',
                   block,
                   target="_blank")
                     b YouTube
-                  b-button.button-social(v-if='twitterLink',
+                  b-button.button-style(v-if='twitterLink',
                   :href='twitterLink',
                   block,
                   target="_blank")
                     b Twitter
-                  b-button.button-social(v-if='vimeoLink',
+                  b-button.button-style(v-if='vimeoLink',
                   :href='vimeoLink',
                   block,
                   target="_blank")
                     b Vimeo
-                  b-button.button-social(v-if='instagramLink',
+                  b-button.button-style(v-if='instagramLink',
                   :href='instagramLink',
                   block,
                   target="_blank")
@@ -266,7 +297,9 @@ export default {
       currentSupply: '',
       tokenValue: '',
       totalSupply: '',
+      tokenName: '',
       tokenCapitalization: null,
+      amountCorrect: false,
       fieldsExpenses: [
         {
           key: 'progress',
@@ -320,10 +353,21 @@ export default {
     };
   },
   methods: {
+    checkAmount() {
+      this.$validator.validateAll().then((result) => {
+        if (result) {
+          this.amountCorrect = true;
+        } else {
+          this.amountCorrect = false;
+        }
+        return 0;
+      });
+    },
     calculateTotalTokenAmount() {
       this.priceAmountToken = this.tokensToBuy * this.tokenValue;
     },
     buyTokens() {
+      this.amountCorrect = false;
       this.loading = true;
       const token = this.tokenData.token.authorization;
       return sportsMenServ.buyTokens(this.userName, this.tokensToBuy, this.sportsmenName, token)
@@ -354,7 +398,7 @@ export default {
           this.chartData.labels = this.days;
           this.chartData.datasets[0] = {
             label: 'Change last week',
-            backgroundColor: '#02bcd4',
+            backgroundColor: '#6aa5dc',
             data: res.data.changes,
           };
         })
@@ -485,9 +529,6 @@ export default {
           font-weight: bold;
         p
           font-size 15px
-  .button-social
-    background-color #02bcd4
-    border-color #02bcd4
   .user-header-block
     width 100%
     .item
@@ -499,5 +540,10 @@ export default {
   .super-input
     .cont
       width 300px
+  .button-style
+    background-color #335aa1
+    border-color #335aa1
+  .failAlert
+    color red
 
 </style>

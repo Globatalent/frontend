@@ -2,6 +2,7 @@ import axios from 'axios';
 import constants from '@/constants';
 
 const path = '/private/home/';
+const profilePath = '/private/';
 
 export default {
   getOverview(userName, token) {
@@ -68,5 +69,35 @@ export default {
       headers: { authorization: `bearer ${token}` },
     };
     return axios.put(`${constants.API_URL}${path}${userName}${resource}`, { step }, config);
+  },
+  getProfile(userName, token) {
+    const resource = '/profile';
+    const config = {
+      headers: { authorization: `bearer ${token}` },
+    };
+    return axios.get(`${constants.API_URL}${profilePath}${userName}${resource}`, config);
+  },
+  updateProfile(userName, uName, userSurname, userEmail, token) {
+    const resource = '/profile';
+    const body = {
+      name: uName,
+      surname: userSurname,
+      email: userEmail,
+    };
+    const config = {
+      headers: { authorization: `bearer ${token}` },
+    };
+    return axios.put(`${constants.API_URL}${profilePath}${userName}${resource}`, body, config);
+  },
+  updatePassword(userName, oldPwd, newPwd, token) {
+    const resource = '/password';
+    const body = {
+      oldPassword: oldPwd,
+      newPassword: newPwd,
+    };
+    const config = {
+      headers: { authorization: `bearer ${token}` },
+    };
+    return axios.put(`${constants.API_URL}${profilePath}${userName}${resource}`, body, config);
   },
 };

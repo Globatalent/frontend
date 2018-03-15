@@ -4,6 +4,7 @@ import VueLocalStorage from 'vue-ls';
 import _ from 'lodash';
 import moment from 'moment';
 import VueNumeric from 'vue-numeric';
+import VeeValidate from 'vee-validate';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
@@ -14,6 +15,7 @@ import router from './router';
 import './plugins/font-awesome';
 import './assets/stylus/colors.styl';
 
+Vue.use(VeeValidate);
 Vue.use(BootstrapVue);
 Vue.use(VueNumeric);
 Vue.config.productionTip = false;

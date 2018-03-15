@@ -57,14 +57,14 @@
           b-alert.d-flex.align-items-center(show, dismissible, variant="warning")
             i.fa.fa-exclamation-circle.fa-2x(aria-hidden='true')
             | &nbsp; You must &nbsp;
-            a(href="#", class="alert-link", v-b-modal="'modalValidate1'") validate
+            b-button.button-style2(href="#", class="alert-link", v-b-modal="'modalValidate1'") Validate
             | &nbsp; your account before starting to invest
       template(v-if="overview.validate1 === true && overview.validate2 === false")
         b-col(sm="12")
           b-alert.d-flex.align-items-center(show, dismissible, variant="warning")
             i.fa.fa-exclamation-circle.fa-2x(aria-hidden='true')
-            | &nbsp; To invest more than 5000€ you must pass a 2nd &nbsp;
-            a(href="#", class="alert-link", v-b-modal="'modalValidate2'") validation
+            | &nbsp; To invest more than 5000USD you must pass a 2nd &nbsp;
+            b-button.button-style2(href="#", class="alert-link", v-b-modal="'modalValidate2'") Validation
             | &nbsp; step
       b-col(sm="12")
         b-row.swag
@@ -78,7 +78,7 @@
                       p.title
                         span.h2
                           // span.h2 {{ overview.tokenCapitalization }}
-                          vue-numeric(currency='€',
+                          vue-numeric(currency='USD',
                           separator='.',
                           v-model='overview.tokenCapitalization',
                           :read-only="true",
@@ -100,7 +100,7 @@
               .block-top.align-self-start.w-100
                 .item
                   p.h5.m-0
-                    vue-numeric(currency='€',
+                    vue-numeric(currency='USD',
                     separator='.',
                     v-model='overview.totalInvest',
                     :read-only="true",
@@ -108,7 +108,7 @@
                   span.text-muted Available to invest
                 .item.mt-3
                   p.h5.m-0
-                    vue-numeric(currency='€',
+                    vue-numeric(currency='USD',
                     separator='.',
                     v-model='overview.totalFounds',
                     :read-only="true",
@@ -116,7 +116,7 @@
                   span.text-muted Total Funds
                 .item.mt-3
                   p.h5.m-0
-                    vue-numeric(currency='€',
+                    vue-numeric(currency='USD',
                     separator='.',
                     v-model='overview.cashFounds',
                     :read-only="true",
@@ -124,7 +124,7 @@
                   span.text-muted Cash
                 .item.mt-3
                   p.h5.m-0
-                    vue-numeric(currency='€',
+                    vue-numeric(currency='USD',
                     separator='.',
                     v-model='overview.tokenFounds',
                     :read-only="true",
@@ -134,12 +134,21 @@
               .block-bottom.d-flex.w-100.h-100
                 .button-cont.align-self-end.w-100
                   template(v-if='isValidated')
-                    b-input-group(prepend='€', append='.00').mb-3
-                      b-form-input(v-model='funds', type='number', placeholder='Amount of money')
-                    b-button(variant="primary", block, @click="putFunds") Add funds
+                    b-input-group(prepend='USD', append='.00').mb-3
+                      b-form-input(
+                      name='Funds',
+                      v-model='funds',
+                      type='number',
+                      placeholder='Amount of money',
+                      v-validate="'numeric'",
+                      :class="{'input': true, 'is-danger': errors.has('funds') }")
+                    span.help.is-danger(v-show="errors.has('Funds')").failAlert {{ errors.first('Funds') }}
+                    b-button.button-style(variant="primary", block, @click.prevent="putFunds", :disabled="isButtonLoading").mt-3
+                      i.fa.fa-credit-card &nbsp;
+                      |Add funds &nbsp;
+                      i.fa.fa-spinner.fa-spin(v-if="isButtonLoading", aria-hidden='true')
           b-col(md='12')
             .performance-block
-              // p Grafica 2
           b-col(md="12")
             .bg-block.p-4.mb-5.mt-4
               b-tabs()
@@ -207,6 +216,7 @@ export default {
         { text: 'What is your mother\'s surname?', value: 2 },
         { text: 'What was your childhood nickname?', value: 3 },
       ],
+      isButtonLoading: false,
       showModal1: false,
       showModal2: false,
       form1: false,
@@ -391,13 +401,21 @@ export default {
         });
     },
     putFunds() {
-      return homeServ.putFunds(this.userName, this.funds, this.tokenData.token.authorization)
-        .then((res) => {
-          window.location.href = res.data.redirectURL;
-        })
-        .catch((err) => {
-          console.debug(err);
-        });
+      this.$validator.validateAll().then((result) => {
+        if (result) {
+          this.isButtonLoading = true;
+          return homeServ.putFunds(this.userName, this.funds, this.tokenData.token.authorization)
+            .then((res) => {
+              this.isButtonLoading = false;
+              window.location.href = res.data.redirectURL;
+            })
+            .catch((err) => {
+              this.isButtonLoading = false;
+              console.debug(err);
+            });
+        }
+        return 0;
+      });
     },
   },
   computed: {
@@ -443,7 +461,13 @@ export default {
   .overview-block-2
     height 100%
     text-align center
-  /*.block-top*/
-  /*.block-bottom*/
+  .button-style
+    background-color #335aa1
+    border-color #335aa1
+  .failAlert
+    color red
+  .button-style2
+   background-color #9fd0f4
+   border-color #9fd0f4
 
 </style>

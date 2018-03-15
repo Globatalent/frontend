@@ -4,7 +4,8 @@
       b-navbar(toggleable='md', type='dark', variant='faded')
         b-navbar-toggle(target='nav_collapse')
         b-navbar-brand(href='#')
-          img.logo(src="~@/assets/img/Globatalent-logo-vert.png")
+          b-link(:to="{name: 'Home'}")
+            img.logo(src="~@/assets/img/Globatalent-logo-vert.png")
         b-collapse#nav_collapse(is-nav='')
           // Right aligned nav items
           b-navbar-nav.ml-auto
@@ -13,12 +14,15 @@
                 span.username {{ username }}
                 span.avatar
                   i.fa.fa-user
+              b-dropdown-item-btn(@click="navigateTo('Profile')")
+                | Profile &nbsp &nbsp
+                i.fa.fa-address-card-o
               b-dropdown-item-btn(@click="logOut")
-                | Log out &nbsp;
+                | Log out &nbsp
                 i.fa.fa-sign-out
       hr.line
       template(v-if="!isHomePage")
-        b-button.go-back(variant="link", @click="goBack") ⟵ Back to previous page
+        b-button.go-back(variant="link", @click="goBack") 🢀 Back to previous page
       // Contenido de la página
       b-row.pt-3
         slot
@@ -144,7 +148,7 @@ export default {
         background-color #5a6773
       span
         font-size 20px
-        color #00bcd4
+        color #6aa5dc
     .bottom-active
       background-color #5a6773
   .avatar
