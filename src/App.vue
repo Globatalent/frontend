@@ -17,7 +17,19 @@
     padding 30px
     a
       font-weight bold
-      color #2c3e50
       &.router-link-exact-active
         color #42b983
+  a
+    color rgb(51, 90, 161)
+    border rgb(51, 90, 161)
+    &:hover
+      color rgb(51, 90, 161)
+      border rgb(51, 90, 161)
+  
+  .custom-file-input:lang(en)
+  .custom-file-label::after
+    content "Upload"
+    background-color rgb(51, 90, 161)
+    border-color rgb(51, 90, 161)
+    color:white
 </style>

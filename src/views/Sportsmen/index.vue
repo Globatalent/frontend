@@ -7,13 +7,10 @@
         .user-header-block.d-flex.justify-content-center
           .cont-center.d-flex.flex-column
             .item
-              template(v-if="image")
                 b-img(:src='image',
                   alt='img',
                   rounded="circle",
                   width="100px", height="100px")
-              template(v-else)
-                img(src="/assets/img/default-avatar.png", width="100px", height="100px")
             .item
               h2 {{ completeName }}
                 small.heart(@click="likeSportsmen")
@@ -55,47 +52,23 @@
                       | {{ addTokensResult.message }}
                   .super-input.d-flex.justify-content-center
                     .cont
-                      b-form-group(label='Token Amount')
-                        b-form-input.mb-3(@input="calculateTotalTokenAmount",
-                        v-model='tokensToBuy',
-                        type='number',
-                        placeholder='Amount of tokens',
-                        name='Amount of tokens',
-                        v-validate="'numeric|max:8'",
-                        :class="{'input': true, 'is-danger': errors.has('tokensToBuy') }")
-                        span.help.is-danger(v-show="errors.has('Amount of tokens')").failAlert {{ errors.first('Amount of tokens') }}
-                      b-form-group(label='Price')
-                        b-form-input.mb-3(v-model='priceAmountToken',
-                        type='number',
-                        disabled)
-                      b-button.button-style(variant="primary", @click.prevent="checkAmount") Buy Tokens &nbsp
-                        i.fa.fa-credit-card
-            b-modal(centered='',
-            v-model="amountCorrect",
-            title="Purchase Confirmation",
-            header-bg-variant="dark",
-            body-bg-variant="secondary",
-            footer-bg-variant="dark",
-            body-text-variant="light")
-              b-container(fluid='')
-                b-row.mb-1
-                  h5.my-4
-                    | Confirm purchase of &nbsp;
-                    span
-                      b
-                        ins {{ tokensToBuy }}
-                    | &nbsp {{ tokenName }} for &nbsp
-                    span
-                      b
-                        ins {{ priceAmountToken }}
-                    | &nbsp USD
-              .w-100(slot='modal-footer')
-                b-btn.float-right(size='sm',
-                variant='primary',
-                @click='buyTokens',
-                block).button-style
-                  | Confirm purchase
-
+                      b-form(@submit.prevent="checkAmount")
+                        b-form-group(label='Token Amount')
+                          b-form-input.mb-3(@input="calculateTotalTokenAmount",
+                          v-model='tokensToBuy',
+                          type='number',
+                          placeholder='Amount of tokens',
+                          name='Amount of tokens',
+                          v-validate="'required|numeric|max:8|min:1'",
+                          :class="{'input': true, 'is-danger': errors.has('tokensToBuy') }")
+                          span.help.is-danger(v-show="errors.has('Amount of tokens')").failAlert {{ errors.first('Amount of tokens') }}
+                        b-form-group(label='Price')
+                          b-form-input.mb-3(v-model='priceAmountToken',
+                          type='number',
+                          disabled)
+                        b-form-group
+                          b-button.button-style(:disabled='amountCorrect',type="submit") Buy Tokens &nbsp
+                            i.fa.fa-credit-card
             .overview-block-2.bg-block.mb-5(v-if='investorSportsmen')
               .block.block-bottom
                 .item.item-1
@@ -167,7 +140,7 @@
                     li
                       h3 Residence
                       p {{ this.residence }}
-                  ul.list-unstyled(v-if='born')
+                  ul.list-unstyled(v-if='born', type='date')
                     li
                       h3 Born
                       p {{ this.born }}
@@ -209,6 +182,30 @@
             b-table(striped, hover, :items='itemsMilestones', :fields='fieldsMilestones', dark)
           b-tab.gg.mt-4(title='Expenses')
             b-table(striped, hover, :items='itemsExpenses', :fields='fieldsExpenses', dark)
+          b-modal(centered='',
+                v-model="amountCorrect",
+                title="Purchase Confirmation",
+                header-bg-variant="dark",
+                body-bg-variant="secondary",
+                footer-bg-variant="dark",
+                body-text-variant="light")
+                  b-container(fluid='')
+                    b-row.mb-1
+                      h5.my-4
+                        | Confirm purchase of &nbsp;
+                        span
+                          b
+                            ins {{ tokensToBuy }}
+                        | &nbsp {{ tokenName }} for &nbsp
+                        span
+                          b
+                            ins {{ priceAmountToken }}
+                        | &nbsp USD
+                  .w-100(slot='modal-footer')
+                    b-btn.float-right(size='sm',
+                    @click='buyTokens',
+                    block).button-style
+                      | Confirm purchase
 
 
 </template>
@@ -235,7 +232,8 @@ export default {
     this.loading = true;
     this.tokenData = this.getToken();
     this.sportsmenName = this.$route.params.sportsmenid;
-    this.image = sportsMenServ.getSportsmenPicturePath(this.sportsmenName);
+    const imageAvailable = await sportsMenServ.checkSportsmenPicture(this.sportsmenName);
+    this.image = imageAvailable ? sportsMenServ.getSportsmenPicturePath(this.sportsmenName) : require('../../assets/img/img_default.png');
     await Promise.all([
       this.getSportsInfo(this.sportsmenName),
       this.getUserInfo(this.sportsmenName),
@@ -300,6 +298,7 @@ export default {
       tokenName: '',
       tokenCapitalization: null,
       amountCorrect: false,
+      tuMadre: false,
       fieldsExpenses: [
         {
           key: 'progress',
@@ -353,8 +352,10 @@ export default {
     };
   },
   methods: {
-    checkAmount() {
+    checkAmount(evt) {
+      evt.preventDefault();
       this.$validator.validateAll().then((result) => {
+        // console.debug(result);
         if (result) {
           this.amountCorrect = true;
         } else {
@@ -375,9 +376,9 @@ export default {
           this.addTokensResult = res.data;
           this.loading = false;
         })
-        .catch((err) => {
+        .catch((/* err */) => {
           this.loading = false;
-          console.debug(err);
+          // console.debug(err);
         });
     },
     getInvestorInfo(sportsmenName) {
@@ -402,8 +403,8 @@ export default {
             data: res.data.changes,
           };
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     getSportsInfo(sportsmenName) {
@@ -411,8 +412,8 @@ export default {
         .then((res) => {
           Object.assign(this, res.data);
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     getUserInfo(sportsmenName) {
@@ -420,8 +421,8 @@ export default {
         .then((res) => {
           Object.assign(this, res.data);
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     getSportsMilestones(sportsmenName) {
@@ -429,8 +430,8 @@ export default {
         .then((res) => {
           this.itemsMilestones = res.data;
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     getSportsExpenses(sportsmenName) {
@@ -438,8 +439,8 @@ export default {
         .then((res) => {
           this.itemsExpenses = res.data;
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     getSportsTokens(sportsmenName) {
@@ -447,8 +448,8 @@ export default {
         .then((res) => {
           Object.assign(this, res.data.tokens);
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     followSportsmen(sportsmenName) {
@@ -457,8 +458,8 @@ export default {
         .followSportsmen(this.userName, sportsmenName, this.completeName, this.tokenValue, token)
         .then(() => {
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     unFollowSportsmen(sportsmenName) {
@@ -467,8 +468,8 @@ export default {
         .unFollowSportsmen(this.userName, sportsmenName, token)
         .then(() => {
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
     likeSportsmen() {
@@ -541,9 +542,8 @@ export default {
     .cont
       width 300px
   .button-style
-    background-color #335aa1
-    border-color #335aa1
+    background-color rgb(51, 90, 161)
+    border-color rgb(51, 90, 161)
   .failAlert
     color red
-
 </style>

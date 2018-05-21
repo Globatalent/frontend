@@ -3,9 +3,11 @@
     b-container.separation-bar
       b-navbar(toggleable='md', type='dark', variant='faded')
         b-navbar-toggle(target='nav_collapse')
-        b-navbar-brand(href='#')
+        b-navbar-brand(href='#', v-if="investor")
           b-link(:to="{name: 'Home'}")
             img.logo(src="~@/assets/img/Globatalent-logo-vert.png")
+        b-navbar-brand(href='#', v-if="!investor")
+          img.logo(src="~@/assets/img/Globatalent-logo-vert.png")
         b-collapse#nav_collapse(is-nav='')
           // Right aligned nav items
           b-navbar-nav.ml-auto
@@ -14,19 +16,21 @@
                 span.username {{ username }}
                 span.avatar
                   i.fa.fa-user
-              b-dropdown-item-btn(@click="navigateTo('Profile')")
+              b-dropdown-item-btn(@click="navigateTo('Profile')", v-if="investor")
                 | Profile &nbsp &nbsp
                 i.fa.fa-address-card-o
               b-dropdown-item-btn(@click="logOut")
                 | Log out &nbsp
                 i.fa.fa-sign-out
       hr.line
-      template(v-if="!isHomePage")
-        b-button.go-back(variant="link", @click="goBack") 🢀 Back to previous page
+      div(v-if="investor")
+        template(v-if="!isHomePage")
+          b-button.go-back(variant="link", @click="goBack")
+            i.fa.fa-arrow-left &nbsp Back to previous page
       // Contenido de la página
       b-row.pt-3
         slot
-    footer.fix-bottom
+    footer.fix-bottom(v-if="investor")
       b-container
         b-row
           b-col
@@ -55,10 +59,16 @@ export default {
   name: 'LayoutDefault',
   created() {
     this.tokenData = this.getToken();
+    if (this.tokenData.sub.role === 'investor') {
+      this.investor = true;
+    } else {
+      this.investor = false;
+    }
   },
   data() {
     return {
       tokenData: null,
+      investor: false,
     };
   },
   mixins: [
@@ -117,6 +127,7 @@ export default {
     font-size 14px
     font-weight 100
     letter-spacing 1px
+    color rgb(51, 90, 161)
   .separation-bar
     padding-bottom 50px
   .logo

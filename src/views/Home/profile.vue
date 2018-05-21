@@ -23,8 +23,7 @@
                     v-model.lazy='form.email')
                 b-form-group
                   b-button.button-style(type='submit',
-                  variant='primary',
-                  block)
+                  block).colorButton
                     | Update Profile &nbsp;
 
                     i.fa.fa-spinner.fa-spin(v-if="isButtonLoadingProfile", aria-hidden='true')
@@ -37,27 +36,37 @@
                   | {{ statusProfile.message }}
             b-jumbotron.reg-cont
               h3.title Update Password
-              b-form.sign-up-form(@submit='updatePassword')
+              b-form.sign-up-form(@submit.prevent='updatePassword')
                 b-form-group(label='Old Password')
                   b-form-input(
-                    type='password',
-                    v-model.lazy='pass.oldPassword',
-                    required)
-                b-form-group(label='New Password')
+                  name='Old Password'
+                  type='password',
+                  v-model.lazy='pass.oldPassword',
+                  placeholder='Old Password',
+                  v-validate="'required|min:8'",
+                  :class="{'input': true, 'is-danger': errors.has('pass.newPassword') }")
+                  span.help.is-danger(v-show="errors.has('Old Password')").failAlert {{ errors.first('Old Password') }}
+                b-form-group(label='Password')
                   b-form-input(
-                    type='password',
-                    v-model.lazy='pass.newPassword',
-                    required)
-                b-form-group(label='Confirm New Password')
+                  name='New Password',
+                  type='password',
+                  v-model='pass.newPassword',
+                  placeholder='New Password',
+                  v-validate="'required|min:8'",
+                  :class="{'input': true, 'is-danger': errors.has('pass.newPassword') }")
+                  span.help.is-danger(v-show="errors.has('New Password')").failAlert {{ errors.first('New Password') }}
+                b-form-group(label='Confirm Password')
                   b-form-input(
-                    type='password',
-                    v-model.lazy='confirmPassword',
-                    required)
-                template(v-if='errorPass')
-                  small.form-text.text-danger You must type the same password each time.
+                  name='Confirm Password',
+                  type='password',
+                  v-model='confirmPassword',
+                  placeholder='Confirm Password',
+                  v-validate="'required|min:8'",
+                  :class="{'input': true, 'is-danger': errors.has('confirmPassword') }")
+                  span.help.is-danger(v-show="errors.has('Confirm Password')").failAlert {{ errors.first('Confirm Password') }}
+                  span.help.is-danger(v-show="errorPass").failAlert Passwords does not match.
                 b-form-group
-                  b-button.button-style(type='submit',
-                  variant='primary', block)
+                  b-button.button-style(type='submit',block).colorButton
                     | Update Password &nbsp;
 
                     i.fa.fa-spinner.fa-spin(v-if="isButtonLoadingPassword", aria-hidden='true')
@@ -78,6 +87,7 @@ import VLayout from '@/layouts/Default.vue';
 import Loading from '@/components/Loading.vue';
 import mixinToken from '@/mixins/token';
 import homeServ from '@/services/home';
+import sha256 from 'js-sha256';
 
 export default {
   name: 'Profile',
@@ -151,28 +161,30 @@ export default {
       evt.preventDefault();
       this.errorPass = false;
       this.isButtonLoadingPassword = false;
-      if (this.pass.newPassword !== this.confirmPassword) {
-        this.errorPass = true;
-        this.isButtonLoadingPassword = false;
-      } else {
-        this.isButtonLoadingPassword = true;
-        return homeServ.updatePassword(this.userName, this.pass.oldPassword, this.pass.newPassword, this.tokenData.token.authorization)
-          .then((res) => {
-            this.dismissCountDownPassword = 5;
-            console.log(res);
-            this.pass.oldPassword = '';
-            this.pass.newPassword = '';
-            this.confirmPassword = '';
-            this.errorPass = false;
+      this.$validator.validateAll().then((result) => {
+        if (result) {
+          if (this.pass.newPassword !== this.confirmPassword) {
+            this.errorPass = true;
             this.isButtonLoadingPassword = false;
-            this.statusUpdatePassword = res.data;
-          })
-          .catch((err) => {
-            this.isButtonLoadingPassword = false;
-            console.debug(err);
-          });
-      }
-      return true;
+          } else {
+            this.isButtonLoadingPassword = true;
+            const hashOldPassword = sha256(this.pass.oldPassword);
+            const hashNewPassword = sha256(this.pass.newPassword);
+            return homeServ.updatePassword(this.userName, hashOldPassword, hashNewPassword, this.tokenData.token.authorization)
+              .then((res) => {
+                this.dismissCountDownPassword = 5;
+                this.errorPass = false;
+                this.isButtonLoadingPassword = false;
+                this.statusUpdatePassword = res.data;
+              })
+              .catch((err) => {
+                this.isButtonLoadingPassword = false;
+                console.debug(err);
+              });
+          }
+        }
+        return 0;
+      });
     },
     getProfile(username) {
       return homeServ.getProfile(username, this.tokenData.token.authorization)
@@ -210,6 +222,7 @@ export default {
       width 10px
       height 10px
   .links
+    color rgb(51, 90, 161)
     display flex
     justify-content center
   .sign-up-form
@@ -219,4 +232,12 @@ export default {
       font-weight bold
   .button-style
     margin-top 10px
+    background-color  rgb(51, 90, 161)
+    border-color  rgb(51, 90, 161)
+  .failAlert
+    color red
+  .colorButton
+    background-color rgb(51, 90, 161)
+    border-color rgb(51, 90, 161)
+
 </style>

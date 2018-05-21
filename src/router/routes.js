@@ -1,14 +1,16 @@
-import Home from '@/views/Home/index.vue';
-import Profile from '@/views/Home/profile.vue';
-import Login from '@/views/Login/index.vue';
-import Reset from '@/views/Login/reset.vue';
-import Search from '@/views/Search/index.vue';
-import Market from '@/views/Market/index.vue';
-import Register from '@/views/Login/register.vue';
-import Sportsmen from '@/views/Sportsmen/index.vue';
+import Home from '../views/Home/index.vue';
+import Profile from '../views/Home/profile.vue';
+import Login from '../views/Login/index.vue';
+import Reset from '../views/Login/reset.vue';
+import Search from '../views/Search/index.vue';
+import Market from '../views/Market/index.vue';
+import Register from '../views/Login/register.vue';
+import Sportsmen from '../views/Sportsmen/index.vue';
+import SportsmenHome from '../views/SportsmenHome/index.vue';
 
 const routes = [
   { path: '/home', name: 'Home', component: Home },
+  { path: '/sportsmenHome', name: 'SportsmenHome', component: SportsmenHome },
   { path: '/profile', name: 'Profile', component: Profile },
   { path: '/search', name: 'Search', component: Search },
   { path: '/market', name: 'Market', component: Market },

@@ -21,16 +21,14 @@
           type='password',
           v-model='form.password',
           placeholder='Password',
-          v-validate="'required|min:6'",
+          v-validate="'required|min:8'",
           :class="{'input': true, 'is-danger': errors.has('form.password') }")
           span.help.is-danger(v-show="errors.has('Password')").failAlert {{ errors.first('Password') }}
         b-form-group
-          b-form-select.select(:options='role', v-model='form.role', required)
-        b-form-group
-          b-button(type='submit', variant='primary', block).colorButton Log In
+          b-button(type='submit',block).colorButton Log In
         .links
           b-link(:to="{name : 'Reset'}").mt-3
-            b Forgot your password ?
+            b.linkColor Forgot your password ?
       b-alert(:show='dismissCountDown',
       dismissible,
       variant='danger',
@@ -40,7 +38,7 @@
     .links
       p Don't have an account? &nbsp
         b-link(:to="{name : 'Register'}")
-          b Sign Up
+          b.linkColor Sign Up
 
 </template>
 
@@ -66,21 +64,18 @@ export default {
       form: {
         username: '',
         password: '',
-        role: null,
       },
-      role: [
-        { text: 'Choose role', value: null },
-        { text: 'Sportsman', value: 'sportsman' },
-        { text: 'Supporter', value: 'investor' },
-      ],
       dismissCountDown: false,
     };
   },
   methods: {
     onSubmit(evt) {
       evt.preventDefault();
-      this.form.password = sha256(this.form.password);
-      this.logUser(this.form);
+      const dataLogin = Object.assign({}, this.form);
+      // Pasamos contraseña a sistema sha256
+      dataLogin.password = sha256(this.form.password);
+      // Pasamos el objeto con logUser
+      this.logUser(dataLogin);
     },
     countDownChanged(dismissCountDown) {
       this.dismissCountDown = dismissCountDown;
@@ -88,23 +83,23 @@ export default {
     logUser(data) {
       this.$validator.validateAll().then((result) => {
         if (result) {
-          if (data.role !== 'sportsman') {
-            loginService.logUser(data)
-              .then((res) => {
-                const obj = jwtDecode(res.data.authorization);
-                obj.token = res.data;
-                this.$ls.set('tokenData', obj);
+          loginService.logUser(data)
+            .then((res) => {
+              const obj = jwtDecode(res.data.authorization);
+              obj.token = res.data;
+              this.$ls.set('tokenData', obj);
+              if (obj.sub.role === 'investor') {
+                // Al ser investor , redirigimos a Home, en caso contrario, a SportsmenHome. ¿Tenemos que crear componente SportsmenHome.vue?
                 this.$router.push({ name: 'Home' });
-              })
-              .catch((err) => {
-                this.dismissCountDown = 5;
-                this.errorMessage = 'User or password incorrect';
-                console.debug(err);
-              });
-          } else {
-            this.dismissCountDown = 5;
-            this.errorMessage = 'This is an alpha version, we are currently working on this feature';
-          }
+              } else {
+                this.$router.push({ name: 'SportsmenHome', params: { sportsmenid: obj.sub.username } });
+              }
+            })
+            .catch((/* err */) => {
+              this.dismissCountDown = 5;
+              this.errorMessage = 'User or password incorrect';
+              // console.debug(err);
+            });
         }
       });
     },
@@ -134,9 +129,11 @@ export default {
     display flex
     justify-content center
   .colorButton
-    background-color #335aa1
-    border-color #335aa1
+    background-color rgb(51, 90, 161)
+    border-color rgb(51, 90, 161)
   .failAlert
     color red
+  .linkColor
+    color rgb(51, 90, 161)
 
 </style>

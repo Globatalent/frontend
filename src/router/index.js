@@ -16,6 +16,7 @@ router.beforeEach((to, from, next) => {
     'Sportsmen',
     'Search',
     'Profile',
+    'SportsmenHome',
   ];
 
   const publicRoutes = [

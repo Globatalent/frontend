@@ -1,5 +1,6 @@
 import axios from 'axios';
 import constants from '@/constants';
+import Vue from 'vue';
 
 const path = '/private/home/';
 const profilePath = '/private/';
@@ -63,6 +64,7 @@ export default {
     };
     return axios.put(`${constants.API_URL}${path}${resource}`, { username, amount }, config);
   },
+
   validateUser(userName, token, step) {
     const resource = '/validate';
     const config = {
@@ -100,4 +102,13 @@ export default {
     };
     return axios.put(`${constants.API_URL}${profilePath}${userName}${resource}`, body, config);
   },
+
 };
+
+axios.interceptors.response.use(response => response, (error) => {
+  if (error.response && error.response.data && error.response.data.code === '401') {
+    Vue.ls.clear();
+    window.location = '/';
+  }
+  return Promise.reject(error);
+});

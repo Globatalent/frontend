@@ -25,7 +25,6 @@
                   required)
                 b-form-group
                   b-button.button-style(type='submit',
-                  variant='primary',
                   block,
                   @click="goSportsmen",
                   :disabled="form.selectedPlayer === null") View Player Profile
@@ -124,7 +123,7 @@ export default {
           this.form.playerOptions = res.data.map((elem) => {
             const returnValue = {
               text: elem.completeName,
-              value: elem._id,
+              value: elem.sportsmanID,
               sport: elem.sport,
               citizen: elem.country,
             };
@@ -160,6 +159,7 @@ export default {
       width 10px
       height 10px
   .links
+    color rgb(51, 90, 161)
     display flex
     justify-content center
   .sign-up-form
@@ -169,4 +169,7 @@ export default {
       font-weight bold
   .button-style
     margin-top 10px
+    background-color  rgb(51, 90, 161)
+    border  rgb(51, 90, 161)
+
 </style>

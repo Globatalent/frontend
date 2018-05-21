@@ -15,11 +15,11 @@
           required,
           placeholder='E-mail address')
         b-form-group
-          b-button(type='submit', variant='primary', block).colorButton Reset Password
+          b-button(type='submit', block).colorButton Reset Password
       h6.styleMessage Please contact us if you have any trouble resetting your password.
-      p(v-if="submited").mt-5 Click here to &nbsp;
+      p.mt-5 Click here to &nbsp;
         b-link(:to="{name : 'Login'}")
-          b Go Login
+          b.login Go Login
       b-alert(:show='dismissCountDown',
       :variant="resultStatus == 'success' ? 'success' : 'danger'",
       dismissible,
@@ -47,7 +47,6 @@ export default {
       createdUserMsg: '',
       resultMessage: null,
       resultStatus: null,
-      submited: false,
       form: {
         email: null,
       },
@@ -66,13 +65,9 @@ export default {
         .then((res) => {
           this.resultMessage = res.data.message;
           this.resultStatus = res.data.result;
-          if (this.resultStatus === 'success') {
-            this.submited = true;
-          }
           this.dismissCountDown = 5;
         })
         .catch((err) => {
-          this.submited = false;
           this.dismissCountDown = 5;
           this.resultMessage = err;
           console.debug(err);
@@ -103,8 +98,10 @@ export default {
   .styleMessage
     color #b6b6b6
   .colorButton
-    background-color #335aa1
-    border-color #335aa1
+    background-color rgb(51, 90, 161)
+    border-color rgb(51, 90, 161)
+  .login
+    color rgb(51, 90, 161)
 
 
 </style>

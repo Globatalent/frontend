@@ -5,10 +5,12 @@
     template(v-else)
       .bg-block
         b-table(:fields="table.fields", :items="table.items", striped, hover, dark, fixed)
+          template(slot='changes', slot-scope='data',)
+            span.clase(style='color:lightgreen', v-if='data.item.changes > 0') {{ data.item.changes }} %
+            span.clase(style='color:red', v-else='data.item.changes < 0') {{ data.item.changes }} %
           template(slot="completeName", slot-scope="data")
-            b-link(:to="{ name: 'Sportsmen', params: { sportsmenid: data.item._id }}")
+            b-link.completeNameStyle(:to="{ name: 'Sportsmen', params: { sportsmenid: data.item.sportsmanID }}")
               | {{ data.item.completeName }}
-
 </template>
 
 <script>
@@ -34,6 +36,7 @@ export default {
   },
   data() {
     return {
+      isPositive: null,
       isLoading: null,
       tableData: null,
       table: {
@@ -132,8 +135,8 @@ export default {
             { key: 'changes', label: 'Change', sortable: true },
           ];
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.debug(err);
         });
     },
   },
@@ -147,4 +150,6 @@ export default {
     background-color #36404a
     border-radius 5px
     margin-bottom 15px
+  .completeNameStyle
+    color rgb(51, 90, 161)
 </style>

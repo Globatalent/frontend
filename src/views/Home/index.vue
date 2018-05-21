@@ -63,9 +63,14 @@
         b-col(sm="12")
           b-alert.d-flex.align-items-center(show, dismissible, variant="warning")
             i.fa.fa-exclamation-circle.fa-2x(aria-hidden='true')
-            | &nbsp; To invest more than 5000USD you must pass a 2nd &nbsp;
+            | &nbsp; To invest more than 5000 USD you must pass a 2nd &nbsp;
             b-button.button-style2(href="#", class="alert-link", v-b-modal="'modalValidate2'") Validation
             | &nbsp; step
+      template(v-if="excededInvestment")
+        b-col(sm="12")
+          b-alert.d-flex.align-items-center(show, dismissible, variant="danger")
+            i.fa.fa-exclamation-circle.fa-2x(aria-hidden='true')
+            | &nbsp; {{ investmentMessage }} &nbsp;
       b-col(sm="12")
         b-row.swag
           b-col(sm="8")
@@ -77,18 +82,18 @@
                     .item.top
                       p.title
                         span.h2
-                          // span.h2 {{ overview.tokenCapitalization }}
+                          // span.h2 {{ overview.tokenFounds }}
                           vue-numeric(currency='USD',
                           separator='.',
-                          v-model='overview.tokenCapitalization',
+                          v-model='overview.tokenFounds',
                           :read-only="true",
                           :precision="2")
                       span.lead.text-muted Token Capitalization
                     .item.bottom
                       p.title
-                        span.currency +
-                        span.h4 {{ overview.changes }}
-                        span.decimal %
+                        span.currency
+                        span.h4(style='color:lightgreen', v-if="overview.changes >0") {{ overview.changes }} %
+                        span.h4(style='color:red', v-else="overview.changes <0") {{ overview.changes }} %
                       span.lead.text-muted Changes (24h)
                 .item-right
                   template(v-if="overview.chart.hasData")
@@ -140,27 +145,28 @@
                       v-model='funds',
                       type='number',
                       placeholder='Amount of money',
-                      v-validate="'numeric'",
+                      v-validate="'required|numeric|max:8|min:1'",
                       :class="{'input': true, 'is-danger': errors.has('funds') }")
                     span.help.is-danger(v-show="errors.has('Funds')").failAlert {{ errors.first('Funds') }}
-                    b-button.button-style(variant="primary", block, @click.prevent="putFunds", :disabled="isButtonLoading").mt-3
-                      i.fa.fa-credit-card &nbsp;
+                    span.clase(style='color:lightgreen', v-if='comprado == true') Funds Added !!
+                    b-button.button-style(:disabled="funds<=0", @click='handleOk',block).mt-3
                       |Add funds &nbsp;
-                      i.fa.fa-spinner.fa-spin(v-if="isButtonLoading", aria-hidden='true')
           b-col(md='12')
             .performance-block
           b-col(md="12")
             .bg-block.p-4.mb-5.mt-4
               b-tabs()
-                b-tab(title='INVESTMENTS', active)
+                b-tab(, title='INVESTMENTS', active)
                   b-table(striped, hover,
                   :items='investments', :fields='investmentsFields', dark, fixed)
-                    template(slot='fullName', slot-scope='data')
+                    template(slot='fullName', slot-scope='data',)
                       b-link(
                       :to="{ name: 'Sportsmen', params: { sportsmenid: data.item.sportsman }}")
                         | {{ data.item.fullName }}
-                    template(slot='changes', slot-scope='data')
-                      span {{ data.item.changes }} %
+                    template(slot='changes', slot-scope='data',)
+                      span.clase(style='color:lightgreen', v-if='data.item.changes > 0') {{ data.item.changes }} %
+                      span.clase(style='color:red', v-else='data.item.changes < 0') {{ data.item.changes }} %
+
                 b-tab(title='WATCHLIST')
                   b-table(striped, hover,
                   :items='watchlist', :fields='watchlistFields', dark, fixed)
@@ -168,9 +174,9 @@
                       b-link(
                       :to="{ name: 'Sportsmen', params: { sportsmenid: data.item.sportsman }}")
                         | {{ data.item.fullName }}
-                    template(slot='changes', slot-scope='data')
-                      span {{ data.item.changes }} %
-
+                    template(slot='changes', slot-scope='data',)
+                      span.clase(style='color:lightgreen', v-if='data.item.changes > 0') {{ data.item.changes }} %
+                      span.clase(style='color:red', v-else='data.item.changes < 0') {{ data.item.changes }} %
 
 </template>
 
@@ -207,15 +213,24 @@ export default {
     ]);
     this.countries = this.getCountries();
     this.loading = false;
+    this.comprado = false;
   },
   data() {
     return {
+      comprado: null,
+      info: '',
+      name: '',
+      names: [],
+      csv: '',
+      csvs: [],
       selectedSecurityQuestion: null,
       securityQuestions: [
         { text: 'Where was your mother born?', value: 1 },
         { text: 'What is your mother\'s surname?', value: 2 },
         { text: 'What was your childhood nickname?', value: 3 },
       ],
+      investmentMessage: null,
+      excededInvestment: false,
       isButtonLoading: false,
       showModal1: false,
       showModal2: false,
@@ -315,6 +330,19 @@ export default {
     };
   },
   methods: {
+    handleOk(evt) {
+      // Prevent modal from closing
+      evt.preventDefault();
+      this.handleSubmit();
+      this.comprado = true;
+      setTimeout(() => {
+        window.location.href = '../';
+      }, 1000);
+    },
+    handleSubmit() {
+      this.names.push(this.name);
+      return homeServ.putFunds(this.userName, this.funds, this.tokenData.token.authorization);
+    },
     validate1(evt) {
       this.loading = true;
       evt.preventDefault();
@@ -324,8 +352,8 @@ export default {
           this.loading = false;
           this.showModal1 = false;
         })
-        .catch((err) => {
-          console.log(err);
+        .catch((/* err */) => {
+          // console.error(err.message);
           this.loading = false;
           this.showModal1 = false;
         });
@@ -339,8 +367,8 @@ export default {
           this.loading = false;
           this.showModal2 = false;
         })
-        .catch((err) => {
-          console.log(err);
+        .catch((/* err */) => {
+          // console.error(err.message);
           this.loading = false;
           this.showModal2 = false;
         });
@@ -378,17 +406,18 @@ export default {
             borderColor: this.chartBorderColors,
           };
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.error(err);
         });
     },
     getInvestments(username) {
       return homeServ.getInvestments(username, this.tokenData.token.authorization)
         .then((res) => {
           this.investments = res.data.investments;
+          console.log(res.data.investments);
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.error(err);
         });
     },
     getWatchlist(username) {
@@ -396,8 +425,8 @@ export default {
         .then((res) => {
           this.watchlist = res.data.watchlist;
         })
-        .catch((err) => {
-          console.debug(err);
+        .catch((/* err */) => {
+          // console.error(err);
         });
     },
     putFunds() {
@@ -405,19 +434,28 @@ export default {
         if (result) {
           this.isButtonLoading = true;
           return homeServ.putFunds(this.userName, this.funds, this.tokenData.token.authorization)
-            .then((res) => {
+            .then(() => {
               this.isButtonLoading = false;
-              window.location.href = res.data.redirectURL;
             })
             .catch((err) => {
+              this.excededInvestment = true;
+              this.investmentMessage = err.response.data.message;
               this.isButtonLoading = false;
-              console.debug(err);
+              // console.debug(err);
             });
         }
         return 0;
       });
     },
   },
+    prueboBoton(){
+      var myCallBack = 'http://localhost:8081/#/market'
+      var signedRequestLink = 'https://app.request.network/#/pay-with-request/'
+      var qs = JSON.stringify({signedRequest: signedRequestLink, callbackUrl: signedRequestLink , networkId: 4})
+      var qsBase64 = btoa(qs)
+      var qsb64Encoded = encodeURIComponent(qsBase64)
+      document.location.href = 'https://app.request.network/#/pay-with-request/' + qsb64Encoded
+    },
   computed: {
     userName() {
       return this.tokenData.sub.username;
@@ -462,12 +500,38 @@ export default {
     height 100%
     text-align center
   .button-style
-    background-color #335aa1
-    border-color #335aa1
+    background-color rgb(51, 90, 161)
+    border-color rgb(51, 90, 161)
+  .button-style2
+    background-color #9fd0f4
+    border-color #9fd0f4s
+  .csv
+    width  20%
+  .tarjetaC
+    width 45%
+    float  left
+    margin-right  5%
+  .info
+    color red
+    margin-top  4%
   .failAlert
     color red
-  .button-style2
-   background-color #9fd0f4
-   border-color #9fd0f4
+  .a
+    color rgb(51, 90, 161)
+  .pay-with-button
+    height 60px
+    min-width 200px
+    display flex
+    align-items center
+    background-color #103b56
+    font-size 16px
+    font-weight normal
+    color white
+    border none
+    border-radius 2px
+    border-bottom 3px solid #6CFDCC
+    padding 0 16px
+  .a
+    color red
 
 </style>
